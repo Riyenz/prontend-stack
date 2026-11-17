@@ -1,0 +1,18 @@
+{
+  "name": "prontend-stack",
+  "version": "0.1.0",
+  "description": "Skills for frontend work. design-loop shows real-component screen variants as one offline, interactive HTML file and repeats rounds of feedback until the design is final.",
+  "license": "MIT",
+  "author": {
+    "name": "Riyenz",
+    "url": "https://github.com/Riyenz"
+  },
+  "repository": "https://github.com/Riyenz/prontend-stack",
+  "keywords": [
+    "frontend",
+    "design",
+    "ui",
+    "variants",
+    "prototype"
+  ]
+}

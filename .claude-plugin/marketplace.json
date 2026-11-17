@@ -1,0 +1,14 @@
+{
+  "name": "prontend-stack",
+  "description": "Skills for frontend work with Claude Code.",
+  "owner": {
+    "name": "Riyenz"
+  },
+  "plugins": [
+    {
+      "name": "prontend-stack",
+      "source": "./",
+      "description": "Skills for frontend work: design-loop and create-design-lab."
+    }
+  ]
+}
