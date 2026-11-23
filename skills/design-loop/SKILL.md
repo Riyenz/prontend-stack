@@ -6,9 +6,11 @@ description: Design a screen with the user before anyone builds it - learn who u
 # Design loop
 
 The user reviews designs as files, never as a running app. Each round is one HTML file: a bar
-with variant tabs and a Desktop/Phone switch, and below it the real screen, built from the
-repo's own components with demo data. Buttons, tabs and modals work. Keys 1 to 9 pick a
-variant; `d` and `p` pick the device.
+with round tabs, variant tabs, a Desktop/Phone/Tablet switch and, when a variant has several
+screens, a second row of screen tabs. Below it is the real screen, built from the repo's own
+components with demo data. Buttons, tabs and modals work. Keys 1 to 9 pick a variant, `a s d f`
+… pick a screen of it, `q w e` pick the device, and the arrow keys step through rounds. Each tab
+shows its key. The user keeps one tab open for the whole loop: it moves to each new round by itself.
 
 ```
 1 Understand → 2 Requirements → 3 Concepts (HTML) → user picks
@@ -37,10 +39,15 @@ there that ignores it all):
   round-1/            one file per variant, plus demo data  → round-1.html
   round-2/            copy of the round it builds on, then edited → round-2.html
   round-2-shots/      PNGs from verify.mjs
+  rounds.js           list of built rounds; open tabs read it to follow new builds
 ```
 
-Each variant is one file, labelled with its file name, in name order. Name a state as its own
-variant when it matters: `A`, `A-empty`. Never edit an old round; copy it forward so the user can
+Each variant is one file, labelled with its file name, in name order. A variant with several
+screens or states has one file per screen, named `<variant>--<screen>`: `A-card--1-contract`,
+`A-card--2-photos`, `A-card--empty`. The viewer shows `A-card` once in the variant row and its
+screens in the row below, so 3 concepts of 4 screens are 3 tabs, not 12. A file with no `--`
+is the variant's only screen. Use the same screen names in every variant, so the user can keep
+a screen and switch variants to compare it. Never edit an old round; copy it forward so the user can
 go back.
 
 ## 1. Understand
@@ -58,8 +65,8 @@ scope, and the states that matter (empty, full, error, phone). Keep it short; th
 ## 3. Concepts
 
 Build 3 concepts in `concepts/` that differ in structure or flow, not in colour or spacing: a
-table against cards against a step-by-step, one page against a modal. Build, check and open
-them (see below). In the reply, give each concept one line on what it optimises for, and
+table against cards against a step-by-step, one page against a modal. When a concept is a flow,
+show its key screens as `<concept>--<screen>` files. Build, check and open them (see below). In the reply, give each concept one line on what it optimises for, and
 recommend one. Wait for the pick; the user may mix two.
 
 ## 4. Brief
@@ -94,6 +101,11 @@ and its UI rules. A variant that needs a new component builds it inside the roun
 data looks like a real customer of this product, never lorem ipsum. Start from the repo's
 stories, fixtures or seed data.
 
+Avoid the patterns in [references/ui-slop.md](references/ui-slop.md): side stripes on boxes,
+cards inside cards, chip soup, emoji icons, gradients, tracked uppercase labels and the rest.
+Read it before the first variant of a loop, and check every screen against it before the user
+sees a round.
+
 ## Build, check, open
 
 `<skill>` is this skill's folder, the base directory shown when the skill loads.
@@ -101,16 +113,22 @@ stories, fixtures or seed data.
 ```bash
 node <skill>/scripts/round.mjs .design-lab/<screen>/round-1
 node <skill>/scripts/verify.mjs .design-lab/<screen>/round-1.html
-open .design-lab/<screen>/round-1.html
+open .design-lab/<screen>/concepts.html     # first build of the screen only
 ```
 
 `round.mjs` runs the lab's build, packs fonts, images, scripts and styles into one file, wraps
 it in the viewer, prints one line and exits. `verify.mjs` opens the file with no server, clicks
-every variant at desktop (1440 px) and phone (390 px), saves PNGs, and exits 1 on any console
+every screen of every variant at desktop (1440 px) and phone (390 px), saves PNGs, and exits 1 on any console
 error, any network request, or a screen that never loads. Fix every problem it prints before
-the user sees the file. It uses the repo's Playwright, or installs one once into
+the user sees the file. It also prints a `slop:` line for each side stripe, gradient text,
+frosted panel or emoji icon it finds. Fix each one that comes from the variant's code; one in
+the repo's own shell stays. It uses the repo's Playwright, or installs one once into
 `~/.cache/design-loop/playwright`. Look at a PNG only to judge a layout problem; the user looks
 at the HTML.
-On macOS `open` shows the file; elsewhere give the path.
+
+Run `open` only for the first build of a screen. After that the open tab checks `rounds.js`
+every 1.5 s and moves to the new round within 2 seconds, so never open the file again: a second
+`open` gives the user a second tab. In the reply, say the round is in their open tab and give the
+path in case they closed it. On macOS `open` shows the file; elsewhere give the path.
 
 How the lab and the viewer talk: [references/lab-contract.md](references/lab-contract.md).

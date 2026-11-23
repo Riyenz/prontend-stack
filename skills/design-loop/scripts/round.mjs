@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join, relative, resolve } from 'node:path'
 import { inlineSite } from './inline.mjs'
 
@@ -79,10 +79,24 @@ if (leftovers.length) {
 const title = `${basename(designDir)} · ${round}`
 const viewer = readFileSync(new URL('./viewer.html', import.meta.url), 'utf8')
   .replaceAll('__TITLE__', title.replace(/[<>&"]/g, ''))
+  .replaceAll('__NAME__', basename(designDir).replace(/[<>&"]/g, ''))
   .replace('__SCREEN__', () => JSON.stringify(screen).replace(/</g, '\\u003c'))
 
 const htmlFile = join(designDir, `${round}.html`)
 writeFileSync(htmlFile, viewer)
+writeRounds(designDir, basename(htmlFile))
+
+// Open round pages poll rounds.js and move to the newest build, so one tab follows the whole loop.
+function writeRounds(dir, latest) {
+  const rounds = readdirSync(dir)
+    .filter(file => file.endsWith('.html'))
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+    .map(file => ({ file, built: Math.round(statSync(join(dir, file)).mtimeMs) }))
+  const latestBuilt = rounds.find(round => round.file === latest).built
+  const temp = join(dir, '.rounds.js.tmp')
+  writeFileSync(temp, `designLabRounds(${JSON.stringify({ latest, built: latestBuilt, rounds })})\n`)
+  renameSync(temp, join(dir, 'rounds.js'))
+}
 
 const megabytes = (Buffer.byteLength(viewer) / 1024 / 1024).toFixed(2)
 const images = inlinedAssets.length ? `, ${inlinedAssets.length} files inlined` : ''

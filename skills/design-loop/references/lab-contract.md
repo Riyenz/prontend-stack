@@ -40,10 +40,11 @@ The page must speak 3 messages:
 |---|---|---|
 | page → viewer | `{ type: 'design-lab:ready', variants: ['A', 'B', 'C'] }` | once, after the first render |
 | viewer → page | `{ type: 'design-lab:show', variant: 'B' }` | on a tab click; render that variant |
-| page → viewer | `{ type: 'design-lab:key', key }` | on keydown outside a text field, so keys 1 to 9, `d` and `p` still work |
+| page → viewer | `{ type: 'design-lab:key', key }` | on keydown outside a text field, so the viewer's keys (1 to 9, `q w e`, `a s d f` …, arrows) still work |
 
 Send to `window.parent` with target `'*'`. Each variant is one file in the round folder; its
-label is the file name without the extension, in name order. A non-component file in the round
+label is the file name without the extension, in name order. Pass labels through unchanged: the
+viewer groups `A-card--empty` under variant `A-card` as its `empty` screen. A non-component file in the round
 (demo data) is the lab's choice; name it in the lab's SKILL.md.
 
 ## Proof
@@ -55,5 +56,5 @@ node <design-loop>/scripts/round.mjs <round folder>
 node <design-loop>/scripts/verify.mjs <round folder>.html
 ```
 
-The lab works when `verify.mjs` prints `problems: 0` with every variant, and its PNGs look like
+The lab works when `verify.mjs` prints `problems: 0` with every screen, and its PNGs look like
 the real app at both sizes.

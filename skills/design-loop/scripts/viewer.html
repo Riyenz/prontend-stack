@@ -8,46 +8,149 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
   body { display: flex; flex-direction: column; background: #e5e7eb; font: 500 13px/1 ui-sans-serif, system-ui, -apple-system, sans-serif; }
-  .bar { display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; background: #0f172a; color: #e2e8f0; flex: none; }
-  .title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: auto; }
-  .group { display: flex; gap: 2px; padding: 2px; border-radius: 8px; background: rgba(255,255,255,0.08); }
-  .group button { border: 0; border-radius: 6px; padding: 7px 12px; background: transparent; color: #cbd5e1; font: inherit; cursor: pointer; }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; min-height: 48px; padding: 6px 12px; background: #0f172a; color: #e2e8f0; flex: none; }
+  .subbar { display: none; min-height: 44px; background: #1e293b; border-top: 1px solid rgba(255,255,255,0.06); }
+  body[data-screens="true"] .subbar { display: flex; }
+  .title { display: flex; align-items: center; gap: 12px; min-width: 0; margin-right: auto; }
+  .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .live { display: none; align-items: center; gap: 6px; color: #94a3b8; font-size: 12px; white-space: nowrap; }
+  .live::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.2); }
+  body[data-live="true"] .live { display: inline-flex; }
+  .control { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .control[hidden] { display: none; }
+  .caption { display: flex; align-items: center; gap: 4px; color: #64748b; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .group { display: flex; flex-wrap: wrap; gap: 2px; padding: 2px; border-radius: 8px; background: rgba(255,255,255,0.08); }
+  .group button { position: relative; display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 6px; padding: 7px 12px; background: transparent; color: #cbd5e1; font: inherit; white-space: nowrap; cursor: pointer; }
   .group button:hover { background: rgba(255,255,255,0.1); }
   .group button[aria-pressed="true"] { background: #fff; color: #0f172a; }
+  .group button[data-latest="true"]::after { content: ''; position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: #22c55e; }
+  .count { color: #64748b; font-size: 10px; font-weight: 600; }
+  .group button[aria-pressed="true"] .count { color: #94a3b8; }
+  kbd { min-width: 16px; padding: 2px 4px; border: 1px solid rgba(255,255,255,0.25); border-radius: 4px; color: #94a3b8; font: 600 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0; text-align: center; text-transform: uppercase; }
+  .group button[aria-pressed="true"] kbd { border-color: #cbd5e1; color: #64748b; }
   .stage { flex: 1; min-height: 0; display: flex; justify-content: center; overflow: auto; }
   iframe { border: 0; background: #fff; }
   body[data-device="desktop"] iframe { width: 100%; height: 100%; }
-  body[data-device="phone"] .stage { padding: 24px; }
+  body:not([data-device="desktop"]) .stage { padding: 24px; }
   body[data-device="phone"] iframe { width: 390px; height: 844px; flex: none; border-radius: 28px; box-shadow: 0 0 0 10px #0f172a, 0 20px 50px rgba(15,23,42,0.35); }
+  body[data-device="tablet"] iframe { width: 768px; height: 1024px; flex: none; border-radius: 20px; box-shadow: 0 0 0 12px #0f172a, 0 20px 50px rgba(15,23,42,0.35); }
 </style>
 </head>
 <body data-device="desktop">
 <div class="bar">
-  <div class="title">__TITLE__</div>
-  <div class="group" id="variants" data-design-variants></div>
-  <div class="group" id="devices" data-design-devices>
-    <button type="button" data-device="desktop" aria-pressed="true">Desktop</button>
-    <button type="button" data-device="phone" aria-pressed="false">Phone</button>
+  <div class="title">
+    <span class="name">__NAME__</span>
+    <span class="live" id="live" title="This tab moves to each new round by itself">Live</span>
+  </div>
+  <div class="control" id="round-control" hidden>
+    <span class="caption">Round <kbd>←</kbd><kbd>→</kbd></span>
+    <div class="group" id="rounds"></div>
+  </div>
+  <div class="control">
+    <span class="caption">Variant</span>
+    <div class="group" id="variants" data-design-variants></div>
+  </div>
+  <div class="control">
+    <span class="caption">Device</span>
+    <div class="group" id="devices" data-design-devices>
+      <button type="button" data-device="desktop" aria-pressed="true" title="Key Q">Desktop <kbd>Q</kbd></button>
+      <button type="button" data-device="phone" aria-pressed="false" title="Key W">Phone <kbd>W</kbd></button>
+      <button type="button" data-device="tablet" aria-pressed="false" title="Key E">Tablet <kbd>E</kbd></button>
+    </div>
+  </div>
+</div>
+<div class="bar subbar">
+  <div class="control">
+    <span class="caption">Screen</span>
+    <div class="group" id="screens" data-design-screens></div>
   </div>
 </div>
 <div class="stage"><iframe id="screen" title="Design"></iframe></div>
 <script>
 const SCREEN = __SCREEN__;
+const DEVICE_KEYS = { q: 'desktop', w: 'phone', e: 'tablet' };
+const SCREEN_KEYS = 'asdfghjkl';
+const SCREEN_SEPARATOR = '--';
+const POLL_MS = 1500;
+const HERE = decodeURIComponent(location.pathname.split('/').pop() || '');
 const frame = document.getElementById('screen');
 const variantBar = document.getElementById('variants');
-let variants = [];
-let current = 0;
+const screenBar = document.getElementById('screens');
+const roundBar = document.getElementById('rounds');
+const live = document.getElementById('live');
+const start = new URLSearchParams(location.hash.slice(1));
+let groups = [];
+let currentGroup = startIndex('v');
+let currentScreen = startIndex('s');
+let rounds = [];
+let seenBuild = null;
 
 frame.srcdoc = SCREEN;
+setDevice(Object.values(DEVICE_KEYS).includes(start.get('d')) ? start.get('d') : 'desktop');
 
-function show(index) {
-  if (!variants[index]) return;
-  current = index;
-  frame.contentWindow.postMessage({ type: 'design-lab:show', variant: variants[index] }, '*');
-  for (const button of variantBar.children) {
-    button.setAttribute('aria-pressed', String(Number(button.dataset.index) === index));
+function startIndex(name) {
+  return Math.max(0, (Number.parseInt(start.get(name), 10) || 1) - 1);
+}
+
+function stateHash() {
+  return '#v=' + (currentGroup + 1) + '&s=' + (currentScreen + 1) + '&d=' + document.body.dataset.device;
+}
+
+function saveState() {
+  try { history.replaceState(null, '', stateHash()); }
+  catch {}
+}
+
+// Labels are file names. "A-card--empty" is the "empty" screen of variant "A-card"; "A-card" alone is its default screen.
+function groupLabels(labels) {
+  const byName = new Map();
+  for (const label of labels) {
+    const cut = label.indexOf(SCREEN_SEPARATOR);
+    const name = cut < 0 ? label : label.slice(0, cut);
+    const screen = cut < 0 ? 'Default' : label.slice(cut + SCREEN_SEPARATOR.length);
+    if (!byName.has(name)) byName.set(name, { name, screens: [] });
+    byName.get(name).screens.push({ label, screen });
   }
-  document.body.dataset.variant = variants[index];
+  return [...byName.values()];
+}
+
+function makeTab(text, keyHint, onClick) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = text;
+  if (keyHint) {
+    const hint = document.createElement('kbd');
+    hint.textContent = keyHint;
+    button.append(' ', hint);
+    button.title = 'Key ' + keyHint.toUpperCase();
+  }
+  button.addEventListener('click', onClick);
+  return button;
+}
+
+function renderScreens() {
+  const screens = groups[currentGroup].screens;
+  screenBar.replaceChildren(...screens.map(function makeScreenTab(screen, index) {
+    const button = makeTab(screen.screen, SCREEN_KEYS[index], function onClick() { show(currentGroup, index); });
+    button.dataset.label = screen.label;
+    button.setAttribute('aria-pressed', String(index === currentScreen));
+    return button;
+  }));
+}
+
+function show(groupIndex, screenIndex) {
+  const group = groups[groupIndex];
+  if (!group) return;
+  currentGroup = groupIndex;
+  currentScreen = Math.min(Math.max(screenIndex, 0), group.screens.length - 1);
+  const label = group.screens[currentScreen].label;
+  frame.contentWindow.postMessage({ type: 'design-lab:show', variant: label }, '*');
+  for (const button of variantBar.children) {
+    button.setAttribute('aria-pressed', String(Number(button.dataset.index) === groupIndex));
+  }
+  if (document.body.dataset.screens === 'true') renderScreens();
+  document.body.dataset.variant = label;
+  saveState();
 }
 
 function setDevice(device) {
@@ -55,29 +158,89 @@ function setDevice(device) {
   for (const button of document.querySelectorAll('[data-design-devices] button')) {
     button.setAttribute('aria-pressed', String(button.dataset.device === device));
   }
+  saveState();
+}
+
+function goToRound(file) {
+  if (file === HERE) location.reload();
+  else location.href = encodeURIComponent(file) + stateHash();
+}
+
+function stepRound(step) {
+  const index = rounds.findIndex(function isHere(round) { return round.file === HERE; });
+  const next = rounds[index + step];
+  if (index >= 0 && next) goToRound(next.file);
+}
+
+function roundLabel(file) {
+  const name = file.replace(/\.html$/, '').replace(/-/g, ' ');
+  return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
 function onKey(key) {
-  const index = Number(key) - 1;
-  if (variants[index]) show(index);
-  if (key === 'd') setDevice('desktop');
-  if (key === 'p') setDevice('phone');
+  const lower = String(key).toLowerCase();
+  const group = Number(key) - 1;
+  if (groups[group]) show(group, currentScreen);
+  const screen = SCREEN_KEYS.indexOf(lower);
+  if (screen >= 0 && groups[currentGroup]?.screens[screen]) show(currentGroup, screen);
+  if (DEVICE_KEYS[lower]) setDevice(DEVICE_KEYS[lower]);
+  if (key === 'ArrowLeft') stepRound(-1);
+  if (key === 'ArrowRight') stepRound(1);
+}
+
+// rounds.js sits next to the round files; round.mjs rewrites it after every build.
+window.designLabRounds = function onRounds(manifest) {
+  const build = manifest.latest + '@' + manifest.built;
+  if (seenBuild === null) seenBuild = build;
+  if (build !== seenBuild) {
+    goToRound(manifest.latest);
+    return;
+  }
+  rounds = manifest.rounds;
+  const here = rounds.find(function isHere(round) { return round.file === HERE; });
+  live.textContent = here ? 'Live · built ' + new Date(here.built).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Live';
+  document.body.dataset.live = 'true';
+  document.getElementById('round-control').hidden = rounds.length < 2;
+  roundBar.replaceChildren(...rounds.map(function makeRoundTab(round) {
+    const button = makeTab(roundLabel(round.file), '', function onClick() { goToRound(round.file); });
+    button.setAttribute('aria-pressed', String(round.file === HERE));
+    button.dataset.latest = String(round.file === manifest.latest);
+    button.title = round.file === manifest.latest ? 'Latest round' : '';
+    return button;
+  }));
+};
+
+function poll(everLoaded) {
+  const script = document.createElement('script');
+  script.src = 'rounds.js?t=' + Date.now();
+  script.onload = script.onerror = function onDone(event) {
+    script.remove();
+    const loaded = event.type === 'load';
+    if (!loaded) document.body.dataset.live = 'false';
+    if (loaded || everLoaded) setTimeout(poll, POLL_MS, everLoaded || loaded);
+  };
+  document.head.append(script);
 }
 
 window.addEventListener('message', function onMessage(event) {
   if (event.source !== frame.contentWindow || !event.data) return;
   if (event.data.type === 'design-lab:ready') {
-    variants = event.data.variants;
-    variantBar.replaceChildren(...variants.map(function makeButton(label, index) {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.textContent = label;
+    groups = groupLabels(event.data.variants);
+    document.body.dataset.screens = String(event.data.variants.some(function hasScreen(label) { return label.includes(SCREEN_SEPARATOR); }));
+    variantBar.replaceChildren(...groups.map(function makeVariantTab(group, index) {
+      const button = makeTab(group.name, index < 9 ? String(index + 1) : '', function onClick() { show(index, currentScreen); });
       button.dataset.index = String(index);
-      button.title = index < 9 ? 'Key ' + (index + 1) : '';
-      button.addEventListener('click', function onClick() { show(index); });
+      button.dataset.label = group.name;
+      if (group.screens.length > 1) {
+        const count = document.createElement('span');
+        count.className = 'count';
+        count.textContent = group.screens.length;
+        count.title = group.screens.length + ' screens';
+        button.insertBefore(count, button.querySelector('kbd'));
+      }
       return button;
     }));
-    show(Math.min(current, variants.length - 1));
+    show(Math.min(currentGroup, groups.length - 1), currentScreen);
     document.body.dataset.ready = 'true';
   }
   if (event.data.type === 'design-lab:key') onKey(event.data.key);
@@ -88,7 +251,13 @@ document.querySelector('[data-design-devices]').addEventListener('click', functi
   if (device) setDevice(device);
 });
 
-window.addEventListener('keydown', function onKeydown(event) { onKey(event.key); });
+window.addEventListener('keydown', function onKeydown(event) {
+  if (event.metaKey || event.ctrlKey || event.altKey) return;
+  onKey(event.key);
+});
+
+// verify.mjs drives the page with Playwright; a round built meanwhile must not move it.
+if (!navigator.webdriver) poll(false);
 </script>
 </body>
 </html>
