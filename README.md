@@ -16,8 +16,8 @@ screen and what it must do, shows 3 UX concepts, writes a design brief for the o
 then shows A/B/C variants and repeats rounds of feedback until you say final.
 
 Every round is one HTML file. It holds the real screen, built from your repo's own components,
-theme and layout, with demo data. Buttons, tabs and modals work. A bar on top switches the
-round, the variant, the screen of that variant, and between desktop, phone and tablet. You open it with a double-click; no server
+theme and layout, with demo data. Buttons, tabs and modals work. Controls around it switch the
+round, the variant, the screen of that variant, and between desktop, tablet and phone. You open it with a double-click; no server
 runs. Keep that one tab open: it moves to each new round by itself.
 
 ```

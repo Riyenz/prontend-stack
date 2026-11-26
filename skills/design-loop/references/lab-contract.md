@@ -40,7 +40,7 @@ The page must speak 3 messages:
 |---|---|---|
 | page → viewer | `{ type: 'design-lab:ready', variants: ['A', 'B', 'C'] }` | once, after the first render |
 | viewer → page | `{ type: 'design-lab:show', variant: 'B' }` | on a tab click; render that variant |
-| page → viewer | `{ type: 'design-lab:key', key }` | on keydown outside a text field, so the viewer's keys (1 to 9, `q w e`, `a s d f` …, arrows) still work |
+| page → viewer | `{ type: 'design-lab:key', key }` | on keydown outside a text field. The viewer also listens inside the frame itself; this message is its fallback |
 
 Send to `window.parent` with target `'*'`. Each variant is one file in the round folder; its
 label is the file name without the extension, in name order. Pass labels through unchanged: the

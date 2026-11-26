@@ -6,84 +6,138 @@
 <title>__TITLE__</title>
 <style>
   * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
   body { display: flex; flex-direction: column; background: #e5e7eb; font: 500 13px/1 ui-sans-serif, system-ui, -apple-system, sans-serif; }
-  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; min-height: 48px; padding: 6px 12px; background: #0f172a; color: #e2e8f0; flex: none; }
-  .subbar { display: none; min-height: 44px; background: #1e293b; border-top: 1px solid rgba(255,255,255,0.06); }
-  body[data-screens="true"] .subbar { display: flex; }
-  .title { display: flex; align-items: center; gap: 12px; min-width: 0; margin-right: auto; }
+
+  /* Top bar: the screen's name and its rounds (left and right keys) on the left, the device on the right. */
+  .topbar { display: flex; flex: none; flex-wrap: wrap; align-items: center; gap: 8px 20px; min-height: 48px; padding: 6px 12px; background: #0f172a; color: #e2e8f0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .title { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .live { display: none; align-items: center; gap: 6px; color: #94a3b8; font-size: 12px; white-space: nowrap; }
   .live::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.2); }
   body[data-live="true"] .live { display: inline-flex; }
+  .topbar .device-control { margin-left: auto; }
+
+  /* Workspace: the panel sits left or under the top bar, whichever leaves the bigger screen. */
+  .workspace { display: flex; flex: 1; min-height: 0; }
+  body[data-layout="side"] .workspace { flex-direction: row; }
+  body[data-layout="top"] .workspace { flex-direction: column; }
+  .panel { display: flex; flex: none; background: #0f172a; color: #e2e8f0; }
+  body[data-layout="side"] .panel { flex-direction: column; gap: 22px; width: 224px; padding: 16px 12px; overflow-y: auto; }
+  body[data-layout="top"] .panel { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px 20px; padding: 6px 12px; }
+
   .control { display: flex; align-items: center; gap: 8px; min-width: 0; }
   .control[hidden] { display: none; }
-  .caption { display: flex; align-items: center; gap: 4px; color: #64748b; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  body[data-layout="side"] .panel .control { flex-direction: column; align-items: stretch; }
+  body[data-layout="top"] .screens-control { order: 10; flex-basis: calc(100% + 24px); margin: 0 -12px -6px; padding: 6px 12px; background: #1e293b; border-top: 1px solid rgba(255,255,255,0.06); }
+  body:not([data-screens="true"]) .screens-control { display: none; }
+  .caption { display: flex; align-items: center; gap: 8px; color: #64748b; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  body[data-layout="side"] .panel .caption { justify-content: space-between; padding: 0 2px; }
+  .keys { display: flex; align-items: center; gap: 3px; }
+  .note { color: #94a3b8; font-size: 11px; font-weight: 500; letter-spacing: 0; text-transform: none; font-variant-numeric: tabular-nums; }
+
   .group { display: flex; flex-wrap: wrap; gap: 2px; padding: 2px; border-radius: 8px; background: rgba(255,255,255,0.08); }
-  .group button { position: relative; display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 6px; padding: 7px 12px; background: transparent; color: #cbd5e1; font: inherit; white-space: nowrap; cursor: pointer; }
-  .group button:hover { background: rgba(255,255,255,0.1); }
+  body[data-layout="side"] .panel .group { flex-direction: column; flex-wrap: nowrap; }
+  .group button, .help-button { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; border: 0; border-radius: 6px; padding: 7px 10px; background: transparent; color: #cbd5e1; font: inherit; text-align: left; white-space: nowrap; cursor: pointer; }
+  .group button:hover, .help-button:hover { background: rgba(255,255,255,0.1); }
   .group button[aria-pressed="true"] { background: #fff; color: #0f172a; }
-  .group button[data-latest="true"]::after { content: ''; position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: #22c55e; }
+  .group button[data-latest="true"] .label::after { content: ''; display: inline-block; width: 6px; height: 6px; margin-left: 6px; border-radius: 50%; background: #22c55e; vertical-align: 2px; }
+  .label { overflow: hidden; text-overflow: ellipsis; }
+  .meta { display: flex; align-items: center; gap: 6px; flex: none; }
   .count { color: #64748b; font-size: 10px; font-weight: 600; }
   .group button[aria-pressed="true"] .count { color: #94a3b8; }
+  .help-button { background: rgba(255,255,255,0.08); }
+  body[data-layout="side"] .panel .help-button { margin-top: auto; flex: none; }
+
   kbd { min-width: 16px; padding: 2px 4px; border: 1px solid rgba(255,255,255,0.25); border-radius: 4px; color: #94a3b8; font: 600 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0; text-align: center; text-transform: uppercase; }
   .group button[aria-pressed="true"] kbd { border-color: #cbd5e1; color: #64748b; }
-  .stage { flex: 1; min-height: 0; display: flex; justify-content: center; overflow: auto; }
-  iframe { border: 0; background: #fff; }
-  body[data-device="desktop"] iframe { width: 100%; height: 100%; }
-  body:not([data-device="desktop"]) .stage { padding: 24px; }
-  body[data-device="phone"] iframe { width: 390px; height: 844px; flex: none; border-radius: 28px; box-shadow: 0 0 0 10px #0f172a, 0 20px 50px rgba(15,23,42,0.35); }
-  body[data-device="tablet"] iframe { width: 768px; height: 1024px; flex: none; border-radius: 20px; box-shadow: 0 0 0 12px #0f172a, 0 20px 50px rgba(15,23,42,0.35); }
+
+  .stage { flex: 1; min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .device { flex: none; overflow: hidden; background: #fff; }
+  .device iframe { display: block; border: 0; background: #fff; transform-origin: 0 0; }
+  body[data-device="desktop"] .device { border-radius: 10px; box-shadow: 0 0 0 1px rgba(15,23,42,0.12), 0 12px 40px rgba(15,23,42,0.18); }
+  body[data-device="tablet"] .device { border-radius: 20px; box-shadow: 0 0 0 12px #0f172a, 0 20px 50px rgba(15,23,42,0.35); }
+  body[data-device="phone"] .device { border-radius: 28px; box-shadow: 0 0 0 10px #0f172a, 0 20px 50px rgba(15,23,42,0.35); }
+
+  .help { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(15,23,42,0.45); }
+  .help[hidden] { display: none; }
+  .help-card { width: min(360px, 100%); padding: 20px; border-radius: 12px; background: #0f172a; color: #e2e8f0; box-shadow: 0 20px 50px rgba(15,23,42,0.4); }
+  .help-card h2 { margin: 0 0 16px; font-size: 14px; font-weight: 600; }
+  .help-card dl { display: grid; grid-template-columns: auto 1fr; gap: 12px 16px; margin: 0; align-items: center; }
+  .help-card dt { display: flex; gap: 4px; }
+  .help-card dd { margin: 0; color: #cbd5e1; line-height: 1.3; }
+  .help-card kbd { font-size: 11px; padding: 3px 6px; }
 </style>
 </head>
-<body data-device="desktop">
-<div class="bar">
+<body data-device="desktop" data-layout="side">
+<header class="topbar">
   <div class="title">
     <span class="name">__NAME__</span>
     <span class="live" id="live" title="This tab moves to each new round by itself">Live</span>
   </div>
-  <div class="control" id="round-control" hidden>
-    <span class="caption">Round <kbd>←</kbd><kbd>→</kbd></span>
+  <section class="control" id="round-control" hidden>
+    <div class="caption">Round <span class="keys"><kbd>←</kbd><kbd>→</kbd></span></div>
     <div class="group" id="rounds"></div>
-  </div>
-  <div class="control">
-    <span class="caption">Variant</span>
-    <div class="group" id="variants" data-design-variants></div>
-  </div>
-  <div class="control">
-    <span class="caption">Device</span>
+  </section>
+  <section class="control device-control">
+    <div class="caption">Device <span class="note" id="size"></span></div>
     <div class="group" id="devices" data-design-devices>
-      <button type="button" data-device="desktop" aria-pressed="true" title="Key Q">Desktop <kbd>Q</kbd></button>
-      <button type="button" data-device="phone" aria-pressed="false" title="Key W">Phone <kbd>W</kbd></button>
-      <button type="button" data-device="tablet" aria-pressed="false" title="Key E">Tablet <kbd>E</kbd></button>
+      <button type="button" data-device="desktop" aria-pressed="true" title="Key D"><span class="label">Desktop</span><span class="meta"><kbd>D</kbd></span></button>
+      <button type="button" data-device="tablet" aria-pressed="false" title="Key T"><span class="label">Tablet</span><span class="meta"><kbd>T</kbd></span></button>
+      <button type="button" data-device="phone" aria-pressed="false" title="Key P"><span class="label">Phone</span><span class="meta"><kbd>P</kbd></span></button>
     </div>
+  </section>
+</header>
+<div class="workspace">
+  <aside class="panel">
+    <section class="control">
+      <div class="caption">Variant</div>
+      <div class="group" id="variants" data-design-variants></div>
+    </section>
+    <section class="control screens-control">
+      <div class="caption">Screen <span class="keys"><span class="note" id="position"></span><kbd>↑</kbd><kbd>↓</kbd></span></div>
+      <div class="group" id="screens" data-design-screens></div>
+    </section>
+    <button type="button" class="help-button" id="help-button" title="Shortcuts (?)" aria-label="Shortcuts"><span class="label">Shortcuts</span><kbd>?</kbd></button>
+  </aside>
+  <main class="stage" id="stage"><div class="device" id="device"><iframe id="screen" title="Design"></iframe></div></main>
+</div>
+<div class="help" id="help" hidden>
+  <div class="help-card" role="dialog" aria-label="Shortcuts">
+    <h2>Shortcuts</h2>
+    <dl>
+      <dt><kbd>←</kbd><kbd>→</kbd></dt><dd>Previous or next round</dd>
+      <dt><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd></dt><dd>Pick a concept or variant, on the same screen</dd>
+      <dt><kbd>↑</kbd><kbd>↓</kbd></dt><dd>Previous or next screen</dd>
+      <dt><kbd>D</kbd><kbd>T</kbd><kbd>P</kbd></dt><dd>Desktop, tablet, phone</dd>
+      <dt><kbd>?</kbd></dt><dd>Show or hide this card</dd>
+    </dl>
   </div>
 </div>
-<div class="bar subbar">
-  <div class="control">
-    <span class="caption">Screen</span>
-    <div class="group" id="screens" data-design-screens></div>
-  </div>
-</div>
-<div class="stage"><iframe id="screen" title="Design"></iframe></div>
 <script>
 const SCREEN = __SCREEN__;
-const DEVICE_KEYS = { q: 'desktop', w: 'phone', e: 'tablet' };
-const SCREEN_KEYS = 'asdfghjkl';
+const DEVICE_KEYS = { d: 'desktop', t: 'tablet', p: 'phone' };
+// Desktop is a 1440 x 900 laptop viewport (16:10); every device keeps its size and shrinks to fit.
+const DEVICE_SIZES = { desktop: [1440, 900], tablet: [768, 1024], phone: [390, 844] };
+const STAGE_PADDING = 24;
 const SCREEN_SEPARATOR = '--';
 const POLL_MS = 1500;
 const HERE = decodeURIComponent(location.pathname.split('/').pop() || '');
 const frame = document.getElementById('screen');
+const stage = document.getElementById('stage');
+const deviceBox = document.getElementById('device');
 const variantBar = document.getElementById('variants');
 const screenBar = document.getElementById('screens');
 const roundBar = document.getElementById('rounds');
 const live = document.getElementById('live');
+const help = document.getElementById('help');
 const start = new URLSearchParams(location.hash.slice(1));
 let groups = [];
 let currentGroup = startIndex('v');
 let currentScreen = startIndex('s');
 let rounds = [];
 let seenBuild = null;
+let listensInScreen = false;
 
 frame.srcdoc = SCREEN;
 setDevice(Object.values(DEVICE_KEYS).includes(start.get('d')) ? start.get('d') : 'desktop');
@@ -101,6 +155,27 @@ function saveState() {
   catch {}
 }
 
+function scaleIn(layout) {
+  document.body.dataset.layout = layout;
+  const [width, height] = DEVICE_SIZES[document.body.dataset.device];
+  return Math.min(1, (stage.clientWidth - 2 * STAGE_PADDING) / width, (stage.clientHeight - 2 * STAGE_PADDING) / height);
+}
+
+// The panel goes on the left or under the top bar, whichever leaves the bigger screen. Ties go to the left.
+function fit() {
+  const scales = { side: scaleIn('side'), top: scaleIn('top') };
+  const layout = scales.side >= scales.top - 0.01 ? 'side' : 'top';
+  const scale = Math.max(0.1, scales[layout]);
+  const [width, height] = DEVICE_SIZES[document.body.dataset.device];
+  document.body.dataset.layout = layout;
+  frame.style.width = width + 'px';
+  frame.style.height = height + 'px';
+  frame.style.transform = 'scale(' + scale + ')';
+  deviceBox.style.width = width * scale + 'px';
+  deviceBox.style.height = height * scale + 'px';
+  document.getElementById('size').textContent = width + ' × ' + height + (scale < 1 ? ' · ' + Math.round(scale * 100) + '%' : '');
+}
+
 // Labels are file names. "A-card--empty" is the "empty" screen of variant "A-card"; "A-card" alone is its default screen.
 function groupLabels(labels) {
   const byName = new Map();
@@ -114,15 +189,30 @@ function groupLabels(labels) {
   return [...byName.values()];
 }
 
-function makeTab(text, keyHint, onClick) {
+function makeTab(text, keyHint, onClick, count) {
   const button = document.createElement('button');
   button.type = 'button';
-  button.textContent = text;
-  if (keyHint) {
-    const hint = document.createElement('kbd');
-    hint.textContent = keyHint;
-    button.append(' ', hint);
-    button.title = 'Key ' + keyHint.toUpperCase();
+  const label = document.createElement('span');
+  label.className = 'label';
+  label.textContent = text;
+  button.append(label);
+  if (count || keyHint) {
+    const meta = document.createElement('span');
+    meta.className = 'meta';
+    if (count) {
+      const counter = document.createElement('span');
+      counter.className = 'count';
+      counter.textContent = count;
+      counter.title = count + ' screens';
+      meta.append(counter);
+    }
+    if (keyHint) {
+      const hint = document.createElement('kbd');
+      hint.textContent = keyHint;
+      meta.append(hint);
+      button.title = 'Key ' + keyHint.toUpperCase();
+    }
+    button.append(meta);
   }
   button.addEventListener('click', onClick);
   return button;
@@ -131,11 +221,12 @@ function makeTab(text, keyHint, onClick) {
 function renderScreens() {
   const screens = groups[currentGroup].screens;
   screenBar.replaceChildren(...screens.map(function makeScreenTab(screen, index) {
-    const button = makeTab(screen.screen, SCREEN_KEYS[index], function onClick() { show(currentGroup, index); });
+    const button = makeTab(screen.screen, '', function onClick() { show(currentGroup, index); });
     button.dataset.label = screen.label;
     button.setAttribute('aria-pressed', String(index === currentScreen));
     return button;
   }));
+  document.getElementById('position').textContent = screens.length > 1 ? (currentScreen + 1) + ' / ' + screens.length : '';
 }
 
 function show(groupIndex, screenIndex) {
@@ -153,11 +244,17 @@ function show(groupIndex, screenIndex) {
   saveState();
 }
 
+function stepScreen(step) {
+  const next = currentScreen + step;
+  if (groups[currentGroup]?.screens[next]) show(currentGroup, next);
+}
+
 function setDevice(device) {
   document.body.dataset.device = device;
   for (const button of document.querySelectorAll('[data-design-devices] button')) {
     button.setAttribute('aria-pressed', String(button.dataset.device === device));
   }
+  fit();
   saveState();
 }
 
@@ -177,15 +274,27 @@ function roundLabel(file) {
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
-function onKey(key) {
-  const lower = String(key).toLowerCase();
-  const group = Number(key) - 1;
-  if (groups[group]) show(group, currentScreen);
-  const screen = SCREEN_KEYS.indexOf(lower);
-  if (screen >= 0 && groups[currentGroup]?.screens[screen]) show(currentGroup, screen);
-  if (DEVICE_KEYS[lower]) setDevice(DEVICE_KEYS[lower]);
-  if (key === 'ArrowLeft') stepRound(-1);
-  if (key === 'ArrowRight') stepRound(1);
+function toggleHelp(open) {
+  help.hidden = open === undefined ? !help.hidden : !open;
+}
+
+// Takes a KeyboardEvent or { key, code }. Returns true when the key did something.
+function onKey(event) {
+  const key = String(event.key);
+  if (key === '?') { toggleHelp(); return true; }
+  if (key === 'Escape' && !help.hidden) { toggleHelp(false); return true; }
+  // Digits by key position, so 1 2 3 work on AZERTY without Shift.
+  const digit = /^(?:Digit|Numpad)([1-9])$/.exec(event.code || '')?.[1] ?? (/^[1-9]$/.test(key) ? key : null);
+  if (digit && groups[digit - 1]) { show(digit - 1, currentScreen); return true; }
+  const device = DEVICE_KEYS[key.toLowerCase()];
+  if (device) { setDevice(device); return true; }
+  if (key === 'ArrowLeft' || key === 'ArrowRight') { stepRound(key === 'ArrowLeft' ? -1 : 1); return true; }
+  if (key === 'ArrowUp' || key === 'ArrowDown') { stepScreen(key === 'ArrowUp' ? -1 : 1); return true; }
+  return false;
+}
+
+function isTyping(target) {
+  return Boolean(target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)));
 }
 
 // rounds.js sits next to the round files; round.mjs rewrites it after every build.
@@ -199,6 +308,7 @@ window.designLabRounds = function onRounds(manifest) {
   rounds = manifest.rounds;
   const here = rounds.find(function isHere(round) { return round.file === HERE; });
   live.textContent = here ? 'Live · built ' + new Date(here.built).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Live';
+  const firstLoad = document.body.dataset.live !== 'true';
   document.body.dataset.live = 'true';
   document.getElementById('round-control').hidden = rounds.length < 2;
   roundBar.replaceChildren(...rounds.map(function makeRoundTab(round) {
@@ -208,6 +318,7 @@ window.designLabRounds = function onRounds(manifest) {
     button.title = round.file === manifest.latest ? 'Latest round' : '';
     return button;
   }));
+  if (firstLoad) fit();
 };
 
 function poll(everLoaded) {
@@ -222,28 +333,37 @@ function poll(everLoaded) {
   document.head.append(script);
 }
 
+// The screen is a srcdoc frame of this page, so the viewer can hear its keys itself, with key
+// position. A lab's forwarded design-lab:key message is the fallback.
+frame.addEventListener('load', function onFrameLoad() {
+  try {
+    frame.contentWindow.addEventListener('keydown', function onScreenKey(event) {
+      if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || isTyping(event.target)) return;
+      if (onKey(event)) event.preventDefault();
+    });
+    listensInScreen = true;
+  }
+  catch {
+    listensInScreen = false;
+  }
+});
+
 window.addEventListener('message', function onMessage(event) {
   if (event.source !== frame.contentWindow || !event.data) return;
   if (event.data.type === 'design-lab:ready') {
     groups = groupLabels(event.data.variants);
     document.body.dataset.screens = String(event.data.variants.some(function hasScreen(label) { return label.includes(SCREEN_SEPARATOR); }));
     variantBar.replaceChildren(...groups.map(function makeVariantTab(group, index) {
-      const button = makeTab(group.name, index < 9 ? String(index + 1) : '', function onClick() { show(index, currentScreen); });
+      const button = makeTab(group.name, index < 9 ? String(index + 1) : '', function onClick() { show(index, currentScreen); }, group.screens.length > 1 ? group.screens.length : 0);
       button.dataset.index = String(index);
       button.dataset.label = group.name;
-      if (group.screens.length > 1) {
-        const count = document.createElement('span');
-        count.className = 'count';
-        count.textContent = group.screens.length;
-        count.title = group.screens.length + ' screens';
-        button.insertBefore(count, button.querySelector('kbd'));
-      }
       return button;
     }));
     show(Math.min(currentGroup, groups.length - 1), currentScreen);
+    fit();
     document.body.dataset.ready = 'true';
   }
-  if (event.data.type === 'design-lab:key') onKey(event.data.key);
+  if (event.data.type === 'design-lab:key' && !listensInScreen) onKey(event.data);
 });
 
 document.querySelector('[data-design-devices]').addEventListener('click', function onDevice(event) {
@@ -251,10 +371,15 @@ document.querySelector('[data-design-devices]').addEventListener('click', functi
   if (device) setDevice(device);
 });
 
+document.getElementById('help-button').addEventListener('click', function onHelpButton() { toggleHelp(); });
+help.addEventListener('click', function onHelpBackdrop(event) { if (event.target === help) toggleHelp(false); });
+
 window.addEventListener('keydown', function onKeydown(event) {
-  if (event.metaKey || event.ctrlKey || event.altKey) return;
-  onKey(event.key);
+  if (event.metaKey || event.ctrlKey || event.altKey || isTyping(event.target)) return;
+  if (onKey(event)) event.preventDefault();
 });
+
+window.addEventListener('resize', fit);
 
 // verify.mjs drives the page with Playwright; a round built meanwhile must not move it.
 if (!navigator.webdriver) poll(false);

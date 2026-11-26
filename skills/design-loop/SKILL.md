@@ -1,16 +1,17 @@
 ---
 name: design-loop
-description: Design a screen with the user before anyone builds it - learn who uses it and what it must do, show 3 different UX concepts, write a design brief for the chosen one, then show A/B/C variants and repeat rounds of feedback until the user says final. Every round is one self-contained, interactive HTML file built from the repo's real components, theme and layout, with a Desktop/Phone switch, opened with a double-click, no server running. Works in any repo through a per-repo lab made by /create-design-lab. Use when asked to design, redesign or explore a screen, "show me options", "A/B/C variants", "mock up", "UX discovery", or a design brief.
+description: Design a screen with the user before anyone builds it - learn who uses it and what it must do, show 3 different UX concepts, write a design brief for the chosen one, then show A/B/C variants and repeat rounds of feedback until the user says final. Every round is one self-contained, interactive HTML file built from the repo's real components, theme and layout, with a Desktop/Tablet/Phone switch, opened with a double-click, no server running. Works in any repo through a per-repo lab made by /create-design-lab. Use when asked to design, redesign or explore a screen, "show me options", "A/B/C variants", "mock up", "UX discovery", or a design brief.
 ---
 
 # Design loop
 
-The user reviews designs as files, never as a running app. Each round is one HTML file: a bar
-with round tabs, variant tabs, a Desktop/Phone/Tablet switch and, when a variant has several
-screens, a second row of screen tabs. Below it is the real screen, built from the repo's own
-components with demo data. Buttons, tabs and modals work. Keys 1 to 9 pick a variant, `a s d f`
-… pick a screen of it, `q w e` pick the device, and the arrow keys step through rounds. Each tab
-shows its key. The user keeps one tab open for the whole loop: it moves to each new round by itself.
+The user reviews designs as files, never as a running app. Each round is one HTML file. A top
+bar holds the rounds on the left and Desktop/Tablet/Phone on the right; a left panel holds the
+variants and, when a variant has several screens, its screens. The real screen, built from the
+repo's own components with demo data, fills the rest at its true size, shrunk to fit: desktop
+is a 1440 x 900 laptop. Buttons, tabs and modals work. Keys: ← → round, 1 to 9 variant, ↑ ↓
+screen, `d t p` device, `?` all keys. Each control shows its key. The user keeps one tab open for
+the whole loop: it moves to each new round by itself.
 
 ```
 1 Understand → 2 Requirements → 3 Concepts (HTML) → user picks

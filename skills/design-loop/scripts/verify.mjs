@@ -103,7 +103,7 @@ function findSlop() {
   return found
 }
 const browser = await launch(chromium)
-const context = await browser.newContext({ viewport: { width: 1440, height: 944 }, deviceScaleFactor: 2 })
+const context = await browser.newContext({ viewport: { width: 1760, height: 1100 }, deviceScaleFactor: 2 })
 const page = await context.newPage()
 
 page.on('console', (message) => {
